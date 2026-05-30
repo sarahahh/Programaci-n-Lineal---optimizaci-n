@@ -1,13 +1,19 @@
-#Interpretar datos del usuario.
+# ============================================================
+# parser.py — Intérprete de datos de la interfaz
+# ============================================================
 
-#Convertir inputs en matrices y vectores.
+# Este módulo actúa como PUENTE entre la interfaz (app.py)
+# y los módulos matemáticos (simplex_solver, graphics).
 
 import numpy as np
 
 
 def build_problem(problem_type, objective_coeffs, constraints):
+   
     """
-    Construye el problema de programación lineal.
+    Toma los datos crudos de la UI y los convierte en el
+    diccionario estándar que usan todos los demás módulos.
+
     """
 
     objective = np.array(objective_coeffs)

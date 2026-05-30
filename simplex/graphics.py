@@ -1,26 +1,22 @@
-#Gráficas.
-
-#Por ejemplo:
-
-#región factible
-#restricciones
-#punto óptimo
-# Módulo para resolver problemas de programación lineal
-# de dos variables mediante el método gráfico.
-#
-# Incluye:
-# - Cálculo de intersecciones entre restricciones
-# - Identificación de vértices factibles
-# - Evaluación de la función objetivo
-# - Gráfica de restricciones, región factible y punto óptimo
+# ============================================================
+# graphics.py — Método gráfico de programación lineal
+# ============================================================
+# Solo funciona con problemas de 2 variables (x1, x2).
+# No hay forma general de graficar en n dimensiones.
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 
-#crear función para verificar si un punto es factible
 def is_feasible_point(point, constraints, tolerance=1e-6):
+    
+    """
+    Verifica si un punto (x1, x2) satisface TODAS las
+    restricciones del problema, incluyendo la no negatividad.
+
+    """
+
     x1, x2 = point
 
     if x1 < -tolerance or x2 < -tolerance:
@@ -44,8 +40,14 @@ def is_feasible_point(point, constraints, tolerance=1e-6):
 
     return True
 
-#crear función para encontrar intersecciones
 def find_intersections(constraints):
+
+    """
+    Encuentra todas las intersecciones entre pares de rectas
+    (restricciones y ejes coordenados).
+
+    """
+
     lines = []
 
     for constraint in constraints:
@@ -79,8 +81,13 @@ def find_intersections(constraints):
 
     return points
 
-#filtrar solo los vértices factibles
 def get_feasible_vertices(constraints):
+
+    """
+    Filtra los puntos de intersección para quedarse solo
+    con los que son vértices de la región factible.
+
+    """
     candidate_points = find_intersections(constraints)
     feasible_points = []
 
@@ -96,13 +103,24 @@ def get_feasible_vertices(constraints):
 
     return feasible_points
 
-#evaluar la función objetivo
 def evaluate_objective(point, objective):
+
+    """
+    Calcula Z = c1*x1 + c2*x2 para un punto dado.
+
+    """
+
     x1, x2 = point
     return objective[0] * x1 + objective[1] * x2
 
-#escoger el mejor vértice
+
 def find_optimal_vertex(vertices, objective, problem_type):
+    
+    """
+    Evalúa Z en todos los vértices y retorna el óptimo.
+
+    """
+
     if not vertices:
         return None, None
 
@@ -119,8 +137,15 @@ def find_optimal_vertex(vertices, objective, problem_type):
 
     return vertices[best_index], values[best_index]
 
-#ordenar vértices para sombrear región factible
+
 def order_vertices(vertices):
+
+    """
+    Ordena los vértices en sentido antihorario para
+    que matplotlib pueda sombrear el polígono correctamente.
+
+    """
+
     center_x = sum(point[0] for point in vertices) / len(vertices)
     center_y = sum(point[1] for point in vertices) / len(vertices)
 
@@ -129,7 +154,7 @@ def order_vertices(vertices):
 
     return sorted(vertices, key=angle_from_center)
 
-#función para graficar
+
 def plot_graphical_solution(
     objective,
     constraints,
@@ -138,6 +163,10 @@ def plot_graphical_solution(
     optimal_value,
     problem_type
 ):
+    """
+    Genera la gráfica completa con matplotlib.
+
+    """
     fig, ax = plt.subplots(figsize=(8, 6))
 
     max_value = 10
@@ -209,6 +238,13 @@ def plot_graphical_solution(
 
 #funcion principal 
 def solve_graphical_method(objective, constraints, problem_type):
+    
+    """
+    Función principal del módulo: orquesta todo el proceso
+    gráfico y retorna un diccionario con los resultados.
+
+    """
+
     vertices = get_feasible_vertices(constraints)
 
     optimal_point, optimal_value = find_optimal_vertex(

@@ -1,17 +1,17 @@
-#Análisis de sensibilidad.
-
-#Ejemplo:
-
-#precios sombra
-#cambios en coeficientes
-#rangos válidos
-# Análisis de sensibilidad básico.
+# ============================================================
+# sensitivity.py — Análisis de sensibilidad
+# ============================================================
 
 import pandas as pd
 
 
 def build_sensitivity_report(result, problem_data, num_variables):
 
+    """
+    Genera una tabla de análisis de sensibilidad básico.
+
+    """
+    
     tableau = result["tableau"]
     basic_variables = result["basic_variables"]
     constraints = problem_data["constraints"]

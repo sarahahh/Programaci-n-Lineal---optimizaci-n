@@ -1,21 +1,20 @@
-# La interfaz Streamlit.
-
-# Aquí van:
-# botones
-# formularios
-# tablas
-# navegación
-
-# RECOGE DATOS DEL USUARIO Y LOS PROCESA.
+# ============================================================
+# app.py — Interfaz principal del programa
+# ============================================================
 
 import streamlit as st
-import pandas as pd
-import numpy as np
+import pandas as pd   # Para crear y mostrar tablas (DataFrames)
+import numpy as np   # Para operaciones numéricas
+
+# Importamos los módulos del proyecto que están en la carpeta /simplex/
 
 from simplex.parser import build_problem
 from simplex.simplex_solver import SimplexSolver
 from simplex.graphics import solve_graphical_method
 
+# ============================
+# Configuración de la página 
+# ============================
 
 st.set_page_config(page_title="Simplex Optimizer", layout="wide")
 
@@ -28,6 +27,13 @@ st.write("Ingrese un problema de Programación Lineal")
 # =========================
 
 def format_objective(objective, problem_type):
+
+    """
+    Convierte la lista de coeficientes de la función objetivo
+    en un string con notación matemática.
+
+    """
+
     terms = []
 
     for i, coefficient in enumerate(objective):
@@ -37,6 +43,11 @@ def format_objective(objective, problem_type):
 
 
 def format_constraint(constraint):
+
+    """
+    Convierte un diccionario de restricción en un string matemático.
+
+    """
     terms = []
 
     for i, coefficient in enumerate(constraint["coefficients"]):
@@ -48,28 +59,58 @@ def format_constraint(constraint):
 
 
 def build_tableau_dataframe(tableau, basic_variables, num_variables, num_constraints):
+
+    """
+    Convierte el tablero simplex (una matriz numpy) en un
+    DataFrame de pandas con nombres de columnas y filas,
+    para mostrarlo como tabla en pantalla.
+    
+    """
     column_names = []
+
+    # Columnas para variables de decisión: X1, X2, ..., Xn
 
     for i in range(num_variables):
         column_names.append(f"X{i + 1}")
 
+    # Columnas para variables de holgura: S1, S2, ..., Sm
+    # Las variables de holgura se añaden al pasar a forma aumentada
+
     for i in range(num_constraints):
         column_names.append(f"S{i + 1}")
 
+    # Última columna: el lado derecho (valores actuales)
+
     column_names.append("RHS")
+
+    # Creamos el DataFrame con los nombres de columna
 
     tableau_df = pd.DataFrame(
         tableau,
         columns=column_names
     )
 
+    # Los nombres de las filas son las variables básicas + Z al final
+
     row_names = basic_variables + ["Z"]
     tableau_df.index = row_names
+
+    # Redondeamos a 4 decimales para que sea legible
 
     return tableau_df.round(4)
 
 
 def show_simplex_iterations(result, problem_data, num_variables):
+
+    """
+    Esta es la función más grande del archivo. Muestra
+    todo el proceso simplex paso a paso en pantalla:
+      1. Resultado óptimo (valores de las variables)
+      2. Variables de holgura en la solución final
+      3. Cada iteración con su tablero, pivot, razones
+      4. El tablero simplex final
+
+    """
     num_constraints = len(problem_data["constraints"])
 
     st.subheader("Solución numérica paso a paso - Método Simplex")
@@ -82,14 +123,20 @@ def show_simplex_iterations(result, problem_data, num_variables):
 
     solution_data = []
 
+    # result["solution"] es una lista [x1, x2, ..., xn]
+
     for i, value in enumerate(result["solution"]):
         solution_data.append({
             "Variable": f"X{i + 1}",
             "Valor": round(value, 4)
         })
 
+    # Convertimos la lista de diccionarios a tabla y la mostramos
+
     solution_df = pd.DataFrame(solution_data)
     st.dataframe(solution_df, use_container_width=True)
+
+    # Muestra un cuadro verde con el valor óptimo Z
 
     st.success(f"Valor óptimo: Z = {result['optimal_value']:.4f}")
 
@@ -97,6 +144,12 @@ def show_simplex_iterations(result, problem_data, num_variables):
     # HOLGURAS
     # =========================
 
+    """
+    Las variables de holgura (S1, S2...) representan recursos
+    no utilizados. Si S1 > 0, la primera restricción tiene
+    "espacio sobrante" y no está activa.
+
+    """
     st.write("### Variables de holgura en la solución final")
 
     slack_data = []
@@ -120,6 +173,12 @@ def show_simplex_iterations(result, problem_data, num_variables):
     # ITERACIONES
     # =========================
 
+    """
+    Aquí está el corazón: mostramos cada paso del simplex.
+    result["iterations"] es una lista de diccionarios,
+    uno por cada pivoteo realizado.
+
+    """
     st.write("### Iteraciones del método simplex")
 
     for step in result["iterations"]:
@@ -139,6 +198,8 @@ def show_simplex_iterations(result, problem_data, num_variables):
 
             with col3:
                 st.metric("Elemento pivote", round(step["pivot_element"], 4))
+
+            # Prueba de razón mínima
 
             ratio_data = []
 
@@ -164,6 +225,8 @@ def show_simplex_iterations(result, problem_data, num_variables):
                 pd.DataFrame(ratio_data),
                 use_container_width=True
             )
+
+        # Tablero de esta iteración
 
         tableau_df = build_tableau_dataframe(
             tableau=step["tableau"],

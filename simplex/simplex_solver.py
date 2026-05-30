@@ -1,19 +1,27 @@
-# El algoritmo simplex.
-
-# Aquí irá:
-
-# pivoteo
-# iteraciones
-# solución óptima
-
-# RESUELVE EL PROBLEMA DE PROGRAMACIÓN LINEAL.
+# ============================================================
+# simplex_solver.py — El algoritmo Simplex
+# ============================================================
+# Implementa el método Simplex para MAXIMIZACIÓN con
+# restricciones del tipo <=. Usa la forma estándar
+# (aumentada) con variables de holgura.
+#
 
 import numpy as np
 
 
 class SimplexSolver:
 
+    """
+    Resuelve un problema de PL por el método Simplex.
+
+    """
+
     def __init__(self, objective, constraints):
+
+        """
+        Guarda el problema y prepara el estado inicial.
+
+        """
 
         self.objective = objective
         self.constraints = constraints
@@ -30,12 +38,18 @@ class SimplexSolver:
 
     def create_tableau(self):
 
+        """
+        Construye el tablero simplex inicial (forma aumentada).
+                  
+        """
+
         rows = self.num_constraints + 1
         cols = self.num_variables + self.num_constraints + 1
 
         tableau = np.zeros((rows, cols))
 
         # Restricciones
+
         for i, constraint in enumerate(self.constraints):
 
             coeffs = constraint["coefficients"]
@@ -44,36 +58,56 @@ class SimplexSolver:
             tableau[i, :self.num_variables] = coeffs
 
             # Variable de holgura
+
             tableau[i, self.num_variables + i] = 1
 
             # Lado derecho
+
             tableau[i, -1] = rhs
 
         # Función objetivo
         # Para maximización se colocan negativos los coeficientes
+
         tableau[-1, :self.num_variables] = -np.array(self.objective)
 
         self.tableau = tableau
 
     def get_variable_name(self, column_index):
 
+        """
+        Convierte un índice de columna en el nombre de variable.
+
+        """
         # Si la columna pertenece a las variables originales
+        
         if column_index < self.num_variables:
             return f"X{column_index + 1}"
 
         # Si la columna pertenece a variables de holgura
+
         slack_index = column_index - self.num_variables
         return f"S{slack_index + 1}"
 
     def is_optimal(self):
 
+        """
+        Verifica si el tablero actual ya es óptimo.
+     
+        """
+
         last_row = self.tableau[-1, :-1]
 
         # En maximización, cuando ya no hay negativos en la fila Z,
         # la solución actual es óptima
+
         return np.all(last_row >= 0)
 
     def get_pivot_column(self):
+
+        """
+        Determina la COLUMNA PIVOTE (variable que ENTRA a la base).
+     
+        """
 
         last_row = self.tableau[-1, :-1]
 
@@ -81,6 +115,11 @@ class SimplexSolver:
         return int(np.argmin(last_row))
 
     def get_pivot_row(self, pivot_col):
+
+        """
+        Determina la FILA PIVOTE (variable que SALE de la base).
+
+        """
 
         ratios = []
 
@@ -100,6 +139,12 @@ class SimplexSolver:
 
     def get_ratios(self, pivot_col):
 
+        """
+        Calcula y retorna TODAS las razones para mostrarlas
+        en la interfaz (prueba de razón mínima visible).
+
+        """
+
         ratios = []
 
         for i in range(self.num_constraints):
@@ -117,14 +162,21 @@ class SimplexSolver:
 
     def pivot(self, pivot_row, pivot_col):
 
+        """
+        Realiza las operaciones de fila del PIVOTEO.
+
+        """
+
         pivot_element = self.tableau[pivot_row, pivot_col]
 
         # Convertir el pivote en 1
+
         self.tableau[pivot_row] = (
             self.tableau[pivot_row] / pivot_element
         )
 
         # Convertir en 0 los demás elementos de la columna pivote
+        
         for i in range(len(self.tableau)):
 
             if i != pivot_row:
@@ -137,6 +189,11 @@ class SimplexSolver:
                 )
 
     def solve(self):
+
+        """
+        Ejecuta el algoritmo Simplex completo.
+
+        """
 
         self.create_tableau()
 
@@ -157,6 +214,8 @@ class SimplexSolver:
                 "Si existen coeficientes negativos, la solución aún no es óptima."
             )
         })
+
+        # Ciclo principal del Simplex
 
         while not self.is_optimal():
 
@@ -179,6 +238,7 @@ class SimplexSolver:
             self.pivot(pivot_row, pivot_col)
 
             # Guardamos cada tablero después del pivoteo
+
             iterations.append({
                 "iteration": len(iterations),
                 "tableau": self.tableau.copy(),
@@ -197,6 +257,7 @@ class SimplexSolver:
         solution = np.zeros(self.num_variables)
 
         # Extraemos la solución final usando las variables básicas finales
+        
         for row_index, variable_name in enumerate(self.basic_variables):
 
             if variable_name.startswith("X"):
