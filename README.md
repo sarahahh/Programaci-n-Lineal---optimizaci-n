@@ -1,1 +1,1 @@
-# Programaci-n-Lineal---optimizaci-n
+# Programacion-Lineal-optimizacion
